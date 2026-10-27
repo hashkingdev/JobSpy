@@ -7,6 +7,7 @@ export const DEFAULT_SETTINGS = {
   job_type: "",
   date_posted: "today",
   results_wanted: 100,
+  no_login_only: true,
 };
 
 export const JOB_TYPES = [
@@ -67,6 +68,7 @@ export function loadSettings() {
       parsed.role = DEFAULT_SETTINGS.role;
     }
     parsed.results_wanted = Math.min(100, Math.max(1, Number(parsed.results_wanted) || 100));
+    parsed.no_login_only = parsed.no_login_only !== false;
     delete parsed.num_pages;
     delete parsed.sites;
     delete parsed.custom_boards;

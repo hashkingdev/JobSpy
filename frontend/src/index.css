@@ -1,24 +1,129 @@
 :root {
-  color: #1c2430;
-  background: #eef2f4;
-  font-family: "Segoe UI", Arial, sans-serif;
-  line-height: 1.45;
+  --font: "Inter", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --mono: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
+
+  --bg: #f3f5f7;
+  --surface: #ffffff;
+  --surface-2: #f8fafb;
+  --surface-3: #eef2f5;
+  --border: #e4e9ee;
+  --border-strong: #cfd7df;
+
+  --text: #0f1721;
+  --text-2: #4b5765;
+  --text-3: #8a95a3;
+  --text-inverse: #ffffff;
+
+  --brand: #0f6e56;
+  --brand-hover: #0b5a46;
+  --brand-soft: #e3f3ec;
+  --brand-ring: rgba(15, 110, 86, 0.25);
+
+  --success: #0a7a4b;
+  --success-soft: #e4f6ec;
+  --warn: #a45f08;
+  --warn-soft: #fff4e0;
+  --danger: #b4231b;
+  --danger-soft: #fdeceb;
+  --info: #1d5fc2;
+  --info-soft: #e8f0fc;
+
+  --radius-sm: 8px;
+  --radius: 12px;
+  --radius-lg: 16px;
+  --shadow-sm: 0 1px 2px rgba(16, 24, 40, 0.05);
+  --shadow-md: 0 6px 24px -8px rgba(16, 24, 40, 0.18);
+  --shadow-lg: 0 24px 60px -20px rgba(16, 24, 40, 0.35);
+
+  color: var(--text);
+  background: var(--bg);
+  font-family: var(--font);
+  font-size: 14px;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
 }
 
-* {
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0d1117;
+    --surface: #151b23;
+    --surface-2: #1a212b;
+    --surface-3: #212a35;
+    --border: #273040;
+    --border-strong: #35404f;
+
+    --text: #e8edf3;
+    --text-2: #a7b2c0;
+    --text-3: #6f7c8c;
+    --text-inverse: #0d1117;
+
+    --brand: #35b58f;
+    --brand-hover: #4cc9a3;
+    --brand-soft: rgba(53, 181, 143, 0.14);
+    --brand-ring: rgba(53, 181, 143, 0.3);
+
+    --success: #4cc985;
+    --success-soft: rgba(76, 201, 133, 0.14);
+    --warn: #f0b354;
+    --warn-soft: rgba(240, 179, 84, 0.14);
+    --danger: #f27d74;
+    --danger-soft: rgba(242, 125, 116, 0.14);
+    --info: #6ea8ff;
+    --info-soft: rgba(110, 168, 255, 0.14);
+
+    --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.4);
+    --shadow-md: 0 6px 24px -8px rgba(0, 0, 0, 0.6);
+    --shadow-lg: 0 24px 60px -20px rgba(0, 0, 0, 0.8);
+  }
+}
+
+*,
+*::before,
+*::after {
   box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  min-height: 100%;
 }
 
 body {
   margin: 0;
+  background: var(--bg);
 }
 
 button,
 input,
-select {
+select,
+textarea {
   font: inherit;
+  color: inherit;
 }
 
 a {
-  color: #0f6e56;
+  color: var(--brand);
+  text-decoration: none;
+}
+
+a:hover {
+  text-decoration: underline;
+}
+
+h1,
+h2,
+h3,
+p {
+  margin: 0;
+}
+
+:focus-visible {
+  outline: 2px solid var(--brand);
+  outline-offset: 2px;
+}
+
+::selection {
+  background: var(--brand-soft);
 }

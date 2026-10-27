@@ -34,3 +34,9 @@ def ensure_database() -> None:
                 conn.execute(text(f'CREATE DATABASE "{db_name}"'))
     finally:
         admin_engine.dispose()
+
+
+def ensure_columns() -> None:
+    """Add columns introduced after the table was first created."""
+    with engine.begin() as conn:
+        conn.execute(text("ALTER TABLE job_links ADD COLUMN IF NOT EXISTS site VARCHAR(120)"))

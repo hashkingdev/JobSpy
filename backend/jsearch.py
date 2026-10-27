@@ -14,6 +14,7 @@ from backend.config import (
     RAPIDAPI_HOST,
     RAPIDAPI_KEY,
 )
+from backend.no_login import pick_no_login_url
 from backend.schemas import CustomBoard, SearchRequest
 
 COUNTRY_CODES = {
@@ -173,12 +174,29 @@ def _to_job(
 ) -> dict[str, Any] | None:
     apply_link = raw.get("job_apply_link") or raw.get("job_google_link")
     site = _match_publisher(raw.get("job_publisher"), selected, custom_boards)
-    for option in raw.get("apply_options") or []:
+    publisher = raw.get("job_publisher")
+    options = [opt for opt in raw.get("apply_options") or [] if isinstance(opt, dict)]
+    for option in options:
         option_site = _match_publisher(option.get("publisher"), selected, custom_boards)
         if option_site and option.get("apply_link"):
             site = option_site
             apply_link = option.get("apply_link")
+            publisher = option.get("publisher") or publisher
             break
+    else:
+        # Prefer the employer's own apply page: direct links first, then any option
+        # that is not behind a login wall, then whatever JSearch picked.
+        ranked = sorted(options, key=lambda opt: 0 if opt.get("is_direct") else 1)
+        candidates = [opt.get("apply_link") for opt in ranked]
+        if raw.get("job_apply_is_direct"):
+            candidates.insert(0, raw.get("job_apply_link"))
+        chosen = pick_no_login_url(candidates)
+        if chosen:
+            apply_link = chosen
+            for option in ranked:
+                if option.get("apply_link") == chosen:
+                    publisher = option.get("publisher") or publisher
+                    break
     if not apply_link:
         return None
 
@@ -188,7 +206,7 @@ def _to_job(
         "job_url": apply_link,
         "title": raw.get("job_title"),
         "company": raw.get("employer_name"),
-        "site": site or raw.get("job_publisher") or "jsearch",
+        "site": site or publisher or "jsearch",
         "location": location or None,
         "job_type": raw.get("job_employment_type"),
         "date_posted": raw.get("job_posted_at_datetime_utc") or raw.get("job_posted_at"),
