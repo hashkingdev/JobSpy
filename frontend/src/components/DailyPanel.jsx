@@ -124,7 +124,14 @@ export default function DailyPanel() {
   const target = status?.target || 100;
   const today = status?.today;
   const isToday = day === "today" || day === today;
-  const count = isToday ? status?.today_count ?? links.length : links.length;
+  const remoteOnly = status?.remote_only !== false;
+  const remoteCount = useMemo(() => links.filter((link) => link.remote === true).length, [links]);
+  const unverifiedCount = useMemo(() => links.filter((link) => link.remote == null).length, [links]);
+  const count = isToday
+    ? (remoteOnly ? status?.today_remote_count : status?.today_count) ?? (remoteOnly ? remoteCount : links.length)
+    : remoteOnly
+      ? remoteCount
+      : links.length;
   const dayLabel = isToday ? today || "today" : day;
   const lastRun = status?.last_run;
   const remaining = Math.max(0, target - count);
@@ -159,7 +166,7 @@ export default function DailyPanel() {
           <h1>Daily 100</h1>
           <p className="page-subtitle">
             {status
-              ? `Collects ${target} job links that open without a login, every day at ${status.run_at}.`
+              ? `Collects ${target} ${status.remote_only ? "fully remote " : ""}job links that open without a login, every day at ${status.run_at}.`
               : "Loading collection status…"}
           </p>
         </div>
@@ -179,14 +186,17 @@ export default function DailyPanel() {
         </Banner>
       ) : null}
       {running ? (
-        <Banner tone="info">Searching every source and role. This usually takes under a minute.</Banner>
+        <Banner tone="info">
+          Searching every source and role. This can take a few minutes when a source rate-limits the key, because
+          the collector waits and retries.
+        </Banner>
       ) : null}
 
       <div className="stats-grid">
         <div className="stat stat-hero">
           <ProgressRing value={count} max={target} />
           <div>
-            <span className="stat-label">Links on {dayLabel}</span>
+            <span className="stat-label">{remoteOnly ? "Remote links" : "Links"} on {dayLabel}</span>
             <div className="stat-value stat-value-lg">
               {count}
               <span className="stat-denom"> / {target}</span>
@@ -197,7 +207,9 @@ export default function DailyPanel() {
                   Target reached
                 </Badge>
               ) : (
-                `${remaining} more to reach today's target`
+                `${remaining} more to reach today's target${
+                  isToday && unverifiedCount ? ` · ${unverifiedCount} older links are unverified` : ""
+                }`
               )}
             </div>
           </div>
@@ -225,13 +237,20 @@ export default function DailyPanel() {
           }
         />
         <StatCard
-          label="No-login filter"
+          label="Filters"
           icon="shield"
-          value={status?.no_login_strict ? "Strict" : "Standard"}
+          value={!status ? "—" : status.remote_only ? "100% remote · no login" : "No login"}
           hint={
-            status?.no_login_strict
-              ? "Also drops ATSs that need an account to apply"
-              : "Drops LinkedIn, Indeed, Glassdoor, ZipRecruiter, Dice and similar"
+            !status
+              ? "Loading…"
+              : [
+                  status.remote_only ? "Drops hybrid, on-site and in-office jobs" : null,
+                  status.no_login_strict
+                    ? "and ATSs that need an account to apply"
+                    : "and LinkedIn, Indeed, Glassdoor, ZipRecruiter, Dice and similar",
+                ]
+                  .filter(Boolean)
+                  .join(", ")
           }
         />
       </div>
@@ -240,7 +259,13 @@ export default function DailyPanel() {
         <Card
           className="links-card"
           title={`Links on ${dayLabel}`}
-          subtitle={`${filtered.length} of ${links.length} shown`}
+          subtitle={
+            links.length
+              ? `${filtered.length} of ${links.length} shown · ${remoteCount} verified remote${
+                  unverifiedCount ? ` · ${unverifiedCount} unverified` : ""
+                }`
+              : "No links yet"
+          }
           actions={
             <>
               <label className="search-box">
@@ -309,6 +334,15 @@ export default function DailyPanel() {
                         <JobLink url={link.job_url} title={link.title} />
                         <div className="cell-sub">
                           <span className="muted mono">{filtered.length - index}</span> · {link.site || "—"}
+                          {link.remote === true ? (
+                            <Badge tone="success" icon="home" className="badge-inline">
+                              Remote
+                            </Badge>
+                          ) : link.remote === false ? (
+                            <Badge tone="warn" icon="alert" className="badge-inline">
+                              Not remote
+                            </Badge>
+                          ) : null}
                         </div>
                       </td>
                       <td className="col-company">
@@ -344,7 +378,8 @@ export default function DailyPanel() {
                         </Badge>
                       ) : (
                         <span className="muted">
-                          +{note.new} new · {note.no_login}/{note.found} no-login
+                          +{note.new} new · {note.remote ?? note.no_login}/{note.found}{" "}
+                          {note.remote != null ? "remote" : "no-login"}
                         </span>
                       )}
                     </div>
@@ -372,7 +407,7 @@ export default function DailyPanel() {
                   <i className="legend-swatch is-strong" /> saved as new
                 </span>
                 <span className="muted">
-                  {lastRun.filtered} login-only dropped · {lastRun.duplicates} duplicates
+                  {lastRun.filtered} dropped (login wall or not remote) · {lastRun.duplicates} duplicates
                 </span>
               </div>
             ) : null}
@@ -409,7 +444,14 @@ export default function DailyPanel() {
               <dd className="muted">{(status?.sources || []).join(", ") || "—"}</dd>
               <dt>Filters</dt>
               <dd className="muted">
-                {status ? `${status.location_type} · United States · posted ${status.date_posted}` : "—"}
+                {status
+                  ? [
+                      status.remote_only ? "100% remote" : status.location_type,
+                      "United States",
+                      `posted ${status.date_posted}`,
+                      "no login",
+                    ].join(" · ")
+                  : "—"}
               </dd>
             </dl>
           </Card>

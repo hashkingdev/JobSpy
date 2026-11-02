@@ -133,6 +133,23 @@ export default function SettingsModal({ open, initialSettings, onClose, onSave }
 
             <label className="switch-row">
               <span className="switch-text">
+                <span className="field-label">Only 100% remote jobs</span>
+                <small className="field-hint">
+                  Drops anything marked hybrid, on-site or in-office, and anything that never says remote.
+                </small>
+              </span>
+              <span className={`switch${draft.remote_only !== false ? " is-on" : ""}`}>
+                <input
+                  type="checkbox"
+                  checked={draft.remote_only !== false}
+                  onChange={(event) => setDraft({ ...draft, remote_only: event.target.checked })}
+                />
+                <span className="switch-knob" />
+              </span>
+            </label>
+
+            <label className="switch-row">
+              <span className="switch-text">
                 <span className="field-label">Only links that open without a login</span>
                 <small className="field-hint">
                   Drops LinkedIn, Indeed, Glassdoor, ZipRecruiter, Dice and other boards that need an account.

@@ -26,6 +26,7 @@ const ICONS = {
   database: "M12 3c4.4 0 8 1.3 8 3s-3.6 3-8 3-8-1.3-8-3 3.6-3 8-3zm-8 3v12c0 1.7 3.6 3 8 3s8-1.3 8-3V6M4 12c0 1.7 3.6 3 8 3s8-1.3 8-3",
   sparkle: "M12 3v4m0 10v4M3 12h4m10 0h4M6 6l2.5 2.5M15.5 15.5 18 18M6 18l2.5-2.5M15.5 8.5 18 6",
   lock: "M7 11V8a5 5 0 0 1 10 0v3M6 11h12v10H6z",
+  home: "M3 11 12 4l9 7M5 10v10h5v-6h4v6h5V10",
   unlock: "M7 11V8a5 5 0 0 1 9.6-2M6 11h12v10H6z",
 };
 
@@ -75,9 +76,9 @@ export function Button({
   );
 }
 
-export function Badge({ tone = "neutral", icon, children }) {
+export function Badge({ tone = "neutral", icon, className = "", children }) {
   return (
-    <span className={`badge badge-${tone}`}>
+    <span className={`badge badge-${tone}${className ? ` ${className}` : ""}`}>
       {icon ? <Icon name={icon} size={12} /> : null}
       {children}
     </span>

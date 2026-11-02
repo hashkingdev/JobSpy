@@ -8,6 +8,14 @@ export const TABS = [
     description: "Automatic daily collection of no-login job links.",
   },
   {
+    id: "company-boards",
+    label: "Company Boards",
+    icon: "layers",
+    group: "Sources",
+    description:
+      "Career pages hosted on Greenhouse, Lever and Ashby. No API key or quota; every link is the employer's own posting.",
+  },
+  {
     id: "jsearch",
     label: "JSearch",
     icon: "search",
@@ -17,7 +25,7 @@ export const TABS = [
   {
     id: "jobs-api",
     label: "Jobs API",
-    icon: "layers",
+    icon: "database",
     group: "Sources",
     description: "Indeed and Bing feeds with direct employer apply links.",
   },

@@ -8,10 +8,30 @@ function formatApiError(data, fallback) {
   return fallback;
 }
 
+const OFFLINE_MESSAGE =
+  "Cannot reach the backend. Start it with `py run.py` inside backend/ and keep the Vite dev server running, then refresh.";
+
 async function request(url, options, fallback) {
-  const response = await fetch(url, options);
-  const data = await response.json().catch(() => ({}));
+  let response;
+  try {
+    response = await fetch(url, options);
+  } catch {
+    // A network-level failure ("Failed to fetch") means the dev server that
+    // served this page is gone, so the request never reached the API.
+    throw new Error(OFFLINE_MESSAGE);
+  }
+  const text = await response.text().catch(() => "");
+  let data = {};
+  try {
+    data = text ? JSON.parse(text) : {};
+  } catch {
+    data = {};
+  }
   if (!response.ok) {
+    if (response.status >= 500 && !text.trim()) {
+      // Vite answers with an empty 5xx when its proxy cannot connect to port 8000.
+      throw new Error(OFFLINE_MESSAGE);
+    }
     throw new Error(formatApiError(data, fallback));
   }
   return data;

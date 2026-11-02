@@ -5,6 +5,7 @@ from pydantic import BaseModel, Field, field_validator
 DATE_POSTED = Literal["today", "3days", "72h", "week", "month"]
 LOCATION_TYPE = Literal["remote", "hybrid", "onsite"]
 SOURCE = Literal[
+    "company-boards",
     "jsearch",
     "jobs-api",
     "job-posting-feed",
@@ -42,8 +43,9 @@ class SearchRequest(BaseModel):
     job_type: Optional[str] = None
     date_posted: DATE_POSTED = "today"
     num_pages: int = Field(default=10, ge=1, le=20)
-    results_wanted: int = Field(default=100, ge=1, le=100)
+    results_wanted: int = Field(default=100, ge=1, le=2000)
     no_login_only: bool = True
+    remote_only: bool = True
 
     @field_validator("date_posted", mode="before")
     @classmethod
@@ -69,6 +71,7 @@ class JobLinkOut(BaseModel):
     job_type: Optional[str] = None
     date_posted: Optional[str] = None
     job_description: Optional[str] = None
+    remote: Optional[bool] = None
 
 
 class SaveRequest(BaseModel):

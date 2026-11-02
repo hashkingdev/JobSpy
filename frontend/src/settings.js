@@ -8,6 +8,7 @@ export const DEFAULT_SETTINGS = {
   date_posted: "today",
   results_wanted: 100,
   no_login_only: true,
+  remote_only: true,
 };
 
 export const JOB_TYPES = [
@@ -19,7 +20,7 @@ export const JOB_TYPES = [
 ];
 
 export const LOCATION_TYPES = [
-  { id: "remote", label: "Remote (work from home)" },
+  { id: "remote", label: "Remote (100% work from home)" },
 ];
 
 export const DATE_OPTIONS = [
@@ -69,6 +70,7 @@ export function loadSettings() {
     }
     parsed.results_wanted = Math.min(100, Math.max(1, Number(parsed.results_wanted) || 100));
     parsed.no_login_only = parsed.no_login_only !== false;
+    parsed.remote_only = parsed.remote_only !== false;
     delete parsed.num_pages;
     delete parsed.sites;
     delete parsed.custom_boards;

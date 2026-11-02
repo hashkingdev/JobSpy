@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Date, DateTime, Integer, String, Text, func
+from sqlalchemy import Boolean, Column, Date, DateTime, Integer, String, Text, func
 
 from backend.db import Base
 
@@ -13,6 +13,7 @@ class JobLink(Base):
     location = Column(String(255), nullable=False, default="")
     site = Column(String(120), nullable=True)
     job_description = Column(Text, nullable=False, default="")
+    remote = Column(Boolean, nullable=True)
     created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
 
 

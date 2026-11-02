@@ -12,6 +12,7 @@ from backend.config import (
     REMOTE_JOBS_ATS_HOST,
     REMOTE_JOBS_HOST,
 )
+from backend.ats import search_company_boards
 from backend.jsearch import search_jsearch
 from backend.rapidapi import (
     RapidAPIError,
@@ -20,10 +21,13 @@ from backend.rapidapi import (
     country_name,
     extract_items,
     pick_company,
+    pick_description,
     pick_location,
+    pick_remote_flag,
     pick_text,
     pick_title,
     pick_url,
+    pick_work_arrangement,
     rapidapi_request,
     status,
     to_job,
@@ -288,6 +292,9 @@ def search_daily_international(
                     raw.get("dateCreated"),
                     json_ld.get("datePosted"),
                 ),
+                "work_arrangement": pick_work_arrangement(merged),
+                "remote": pick_remote_flag(merged),
+                "job_description": pick_description(merged),
             }
             if job["job_url"]:
                 page_jobs.append(job)
@@ -458,6 +465,7 @@ def _unique(jobs: list[dict[str, Any]]) -> list[dict[str, Any]]:
 
 
 PROVIDERS: dict[str, ProviderFn] = {
+    "company-boards": search_company_boards,
     "jsearch": search_jsearch,
     "jobs-api": search_jobs_api,
     "job-posting-feed": search_job_posting_feed,

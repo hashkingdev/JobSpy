@@ -16,6 +16,11 @@ import {
 } from "./ui.jsx";
 import { JOB_TYPES, countryLabel, dateLabel, loadSettings, locationLabel, saveSettings } from "../settings.js";
 
+const FILTER_REASON = {
+  "no-login filter": "login-only",
+  "remote filter": "not fully remote",
+};
+
 const PAGE_SIZES = [10, 25, 50];
 
 function newId() {
@@ -89,21 +94,23 @@ export default function JobBoardPanel({ tab }) {
       setSearched(true);
       setLastStatus(data.site_status || []);
       const errors = (data.site_status || []).filter((item) => item.error);
-      const dropped = (data.site_status || []).find((item) => item.dropped)?.dropped || 0;
+      const droppedNotes = (data.site_status || [])
+        .filter((item) => item.dropped)
+        .map((item) => `${item.dropped} ${FILTER_REASON[item.site] || "filtered"}`);
       if (!nextJobs.length) {
         setMessage({
           tone: "warn",
           text: errors.length
             ? errors.map((item) => `${item.site}: ${item.error}`).join(" · ")
-            : dropped
-              ? `All ${dropped} results needed a login and were dropped.`
+            : droppedNotes.length
+              ? `Every result was dropped: ${droppedNotes.join(", ")}.`
               : "No job links found for these settings.",
         });
-      } else if (dropped || errors.length) {
+      } else if (droppedNotes.length || errors.length) {
         setMessage({
           tone: "info",
           text: [
-            dropped ? `Dropped ${dropped} login-only link${dropped === 1 ? "" : "s"}.` : null,
+            droppedNotes.length ? `Dropped ${droppedNotes.join(", ")}.` : null,
             ...errors.map((item) => `${item.site}: ${item.error}`),
           ]
             .filter(Boolean)
@@ -171,6 +178,11 @@ export default function JobBoardPanel({ tab }) {
     { icon: "layers", text: locationLabel(settings.location_type) },
     { icon: "calendar", text: dateLabel(settings.date_posted) },
     { icon: "bolt", text: jobTypeLabel === "Any" ? "Any type" : jobTypeLabel },
+    {
+      icon: "home",
+      text: settings.remote_only === false ? "Remote (unverified)" : "100% remote",
+      tone: settings.remote_only === false ? "warn" : "brand",
+    },
     {
       icon: settings.no_login_only === false ? "unlock" : "lock",
       text: settings.no_login_only === false ? "All links" : "No-login only",
@@ -283,7 +295,7 @@ export default function JobBoardPanel({ tab }) {
             title={searched ? "No job links found" : "Search for job links"}
             text={
               searched
-                ? "Try a broader role, or turn off the no-login filter in settings."
+                ? "Try a broader role, or relax the remote and no-login filters in settings."
                 : `Enter a role above and press Get job links to query ${tab.label}.`
             }
           />
@@ -390,7 +402,12 @@ export default function JobBoardPanel({ tab }) {
               tone={item.error ? "danger" : item.dropped ? "warn" : "success"}
               icon={item.error ? "alert" : "check"}
             >
-              {item.site}: {item.error ? item.error : item.dropped ? `dropped ${item.dropped}` : `${item.count} links`}
+              {item.site}:{" "}
+              {item.error
+                ? item.error
+                : item.dropped
+                  ? `dropped ${item.dropped} ${FILTER_REASON[item.site] || ""}`.trim()
+                  : `${item.count} links`}
             </Badge>
           ))}
         </div>

@@ -16,7 +16,12 @@ from backend.config import (
     NO_LOGIN_STRICT,
 )
 from backend.db import Base, engine, ensure_columns, ensure_database, get_db
-from backend.links import count_links_for_date, links_for_date, upsert_links
+from backend.links import (
+    count_links_for_date,
+    count_remote_links_for_date,
+    links_for_date,
+    upsert_links,
+)
 from backend.models import DailyRun
 from backend.schemas import SaveRequest, SaveResponse, SearchRequest
 from backend.scraper_service import search_job_links
@@ -96,12 +101,14 @@ def daily_status(db: Session = Depends(get_db)):
         "next_run_at": daily.next_run_at().isoformat() if DAILY_ENABLED else None,
         "today": today.isoformat(),
         "today_count": count_links_for_date(db, today),
+        "today_remote_count": count_remote_links_for_date(db, today),
         "running": daily.is_running(),
         "roles": daily.roles(),
         "sources": daily.sources(),
         "location_type": DAILY_LOCATION_TYPE,
         "date_posted": DAILY_DATE_POSTED,
         "no_login_strict": NO_LOGIN_STRICT,
+        "remote_only": daily.remote_only(),
         "last_run": daily.run_to_dict(last_run),
     }
 

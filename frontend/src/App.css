@@ -190,6 +190,13 @@
   color: var(--text-3);
 }
 
+.badge-inline {
+  margin-left: 8px;
+  padding: 1px 7px;
+  font-size: 11px;
+  vertical-align: middle;
+}
+
 /* ---------- Buttons ---------- */
 
 .btn {

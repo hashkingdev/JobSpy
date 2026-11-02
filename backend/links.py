@@ -13,6 +13,11 @@ def _key(url: str | None) -> str:
     return (url or "").strip().lower()
 
 
+def _remote_flag(job: dict[str, Any]) -> bool | None:
+    value = job.get("remote")
+    return value if isinstance(value, bool) else None
+
+
 def existing_keys(db: Session, urls: list[str]) -> set[str]:
     keys = {_key(url) for url in urls if _key(url)}
     if not keys:
@@ -59,6 +64,10 @@ def upsert_links(
                 existing.location = (job.get("location") or existing.location or "")[:255]
                 existing.site = (job.get("site") or existing.site or "")[:120]
                 existing.url = url
+                if _remote_flag(job) is not None:
+                    existing.remote = _remote_flag(job)
+                if job.get("job_description") and not existing.job_description:
+                    existing.job_description = job["job_description"]
                 updated += 1
                 continue
 
@@ -71,6 +80,7 @@ def upsert_links(
                 location=(job.get("location") or "")[:255],
                 site=(job.get("site") or "")[:120],
                 job_description=job.get("job_description") or "",
+                remote=_remote_flag(job),
             )
         )
         known.add(key)
@@ -82,6 +92,14 @@ def upsert_links(
 
 def count_links_for_date(db: Session, day: date) -> int:
     return db.query(JobLink).filter(func.date(JobLink.created_at) == day).count()
+
+
+def count_remote_links_for_date(db: Session, day: date) -> int:
+    return (
+        db.query(JobLink)
+        .filter(func.date(JobLink.created_at) == day, JobLink.remote.is_(True))
+        .count()
+    )
 
 
 def links_for_date(db: Session, day: date) -> list[dict[str, Any]]:
@@ -99,6 +117,7 @@ def links_for_date(db: Session, day: date) -> list[dict[str, Any]]:
             "company": row.company,
             "site": row.site,
             "location": row.location,
+            "remote": row.remote,
             "created_at": row.created_at.isoformat() if row.created_at else None,
         }
         for row in rows

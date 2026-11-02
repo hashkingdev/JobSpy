@@ -108,6 +108,8 @@ def format_rapidapi_error(host: str, status_code: int, body: str) -> str:
             return f"Subscribe to this API on RapidAPI first: {subscribe}"
         return f"This RapidAPI key is not subscribed to {host}."
     if status_code == 429:
+        if "quota" in lowered or "exceeded" in lowered:
+            return f"{host} quota exhausted for this RapidAPI key: {body[:160]}"
         return f"{host} rate-limited this key. Wait a minute and search again."
     return f"{host} error {status_code}: {body[:300]}"
 
@@ -216,6 +218,53 @@ def pick_text(*values: Any) -> str | None:
     return None
 
 
+def pick_bool(*values: Any) -> bool | None:
+    for value in values:
+        if isinstance(value, bool):
+            return value
+        if isinstance(value, str) and value.strip().lower() in {"true", "yes", "1"}:
+            return True
+        if isinstance(value, str) and value.strip().lower() in {"false", "no", "0"}:
+            return False
+    return None
+
+
+def pick_work_arrangement(raw: dict[str, Any]) -> str | None:
+    return pick_text(
+        raw.get("ai_work_arrangement"),
+        raw.get("work_arrangement"),
+        raw.get("workArrangement"),
+        raw.get("workPlace"),
+        raw.get("workplace"),
+        raw.get("workplaceType"),
+        raw.get("workplace_type"),
+        raw.get("remote_type"),
+        raw.get("remoteType"),
+        raw.get("locationType"),
+        raw.get("jobLocationType"),
+        raw.get("location_type"),
+    )
+
+
+def pick_remote_flag(raw: dict[str, Any]) -> bool | None:
+    return pick_bool(
+        raw.get("remote"),
+        raw.get("isRemote"),
+        raw.get("is_remote"),
+        raw.get("remote_job"),
+        raw.get("workFromHome"),
+        raw.get("work_from_home"),
+    )
+
+
+def pick_description(raw: dict[str, Any]) -> str | None:
+    for key in ("description", "job_description", "jobDescription", "ai_description", "content", "body"):
+        value = raw.get(key)
+        if isinstance(value, str) and value.strip():
+            return value.strip()
+    return None
+
+
 def pick_company(raw: dict[str, Any]) -> str | None:
     return pick_text(
         raw.get("company"),
@@ -281,6 +330,9 @@ def to_job(
             raw.get("dateCreated"),
             raw.get("date_created"),
         ),
+        "work_arrangement": pick_work_arrangement(raw),
+        "remote": pick_remote_flag(raw),
+        "job_description": pick_description(raw),
     }
 
 

@@ -8,6 +8,7 @@ import requests
 from backend.config import (
     JSEARCH_COUNTRY,
     JSEARCH_DATE_POSTED,
+    JSEARCH_DIRECT_ONLY,
     JSEARCH_NUM_PAGES,
     JSEARCH_QUERY,
     JSEARCH_SEARCH_URL,
@@ -15,6 +16,7 @@ from backend.config import (
     RAPIDAPI_KEY,
 )
 from backend.no_login import pick_no_login_url
+from backend.rapidapi import format_rapidapi_error
 from backend.schemas import CustomBoard, SearchRequest
 
 COUNTRY_CODES = {
@@ -138,7 +140,7 @@ def _request_jobs(params: dict[str, str]) -> list[dict[str, Any]]:
         timeout=60,
     )
     if response.status_code >= 400:
-        raise RuntimeError(f"JSearch error {response.status_code}: {response.text[:300]}")
+        raise RuntimeError(format_rapidapi_error("jsearch.p.rapidapi.com", response.status_code, response.text[:400]))
     payload = response.json()
     if payload.get("status") not in (None, "OK"):
         raise RuntimeError(f"JSearch status: {payload.get('status')}")
@@ -187,6 +189,9 @@ def _to_job(
         # Prefer the employer's own apply page: direct links first, then any option
         # that is not behind a login wall, then whatever JSearch picked.
         ranked = sorted(options, key=lambda opt: 0 if opt.get("is_direct") else 1)
+        if JSEARCH_DIRECT_ONLY:
+            # Only the employer's own apply page: aggregators and scraper sites are never "direct".
+            ranked = [opt for opt in ranked if opt.get("is_direct")]
         candidates = [opt.get("apply_link") for opt in ranked]
         if raw.get("job_apply_is_direct"):
             candidates.insert(0, raw.get("job_apply_link"))
@@ -197,6 +202,8 @@ def _to_job(
                 if option.get("apply_link") == chosen:
                     publisher = option.get("publisher") or publisher
                     break
+        elif JSEARCH_DIRECT_ONLY:
+            return None
     if not apply_link:
         return None
 
@@ -210,6 +217,8 @@ def _to_job(
         "location": location or None,
         "job_type": raw.get("job_employment_type"),
         "date_posted": raw.get("job_posted_at_datetime_utc") or raw.get("job_posted_at"),
+        "job_description": raw.get("job_description") if isinstance(raw.get("job_description"), str) else None,
+        "remote": raw.get("job_is_remote") if isinstance(raw.get("job_is_remote"), bool) else None,
         "matched_site": bool(site),
     }
 

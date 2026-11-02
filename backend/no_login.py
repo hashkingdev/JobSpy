@@ -54,6 +54,55 @@ LOGIN_WALL_DOMAINS = {
     "facebook.com",
     "x.com",
     "twitter.com",
+    # Aggregators that re-list postings behind a sign-up wall
+    "jobleads.com",
+    "tealhq.com",
+    "jobright.ai",
+    "dailyremote.com",
+    "haystackapp.io",
+    "hiringcafe.com",
+    "dynamitejobs.com",
+    "remotejobs.dedyn.io",
+    "jobgether.com",
+    "himalayas.app",
+    "workingnomads.com",
+    "remote.co",
+    "remoteok.com",
+    "jobspresso.co",
+    "arc.dev",
+    "ladders.com",
+}
+
+# Free web-hosting platforms used by scraper sites that mirror job postings (never an employer).
+SCRAPER_HOST_DOMAINS = {
+    "talk4fun.net",
+    "liveblog365.com",
+    "totalh.net",
+    "fast-page.org",
+    "synergize.co",
+    "iblogger.org",
+    "000webhostapp.com",
+    "byethost.com",
+    "rf.gd",
+    "epizy.com",
+    "great-site.net",
+    "unaux.com",
+    "ezyro.com",
+    "wuaze.com",
+    "42web.io",
+    "infinityfreeapp.com",
+    "lovestoblog.com",
+    "iceiy.com",
+    "kesug.com",
+    "atwebpages.com",
+    "weebly.com",
+    "blogspot.com",
+    "wordpress.com",
+    "wixsite.com",
+    "netlify.app",
+    "vercel.app",
+    "github.io",
+    "pages.dev",
 }
 
 # Applicant tracking systems that are public to read but ask you to create an account to apply.
@@ -86,9 +135,9 @@ def _split_env(value: str) -> set[str]:
     }
 
 
-BLOCKED = (LOGIN_WALL_DOMAINS | _split_env(NO_LOGIN_BLOCK_EXTRA)) - _split_env(
-    NO_LOGIN_ALLOW_EXTRA
-)
+BLOCKED = (
+    LOGIN_WALL_DOMAINS | SCRAPER_HOST_DOMAINS | _split_env(NO_LOGIN_BLOCK_EXTRA)
+) - _split_env(NO_LOGIN_ALLOW_EXTRA)
 if NO_LOGIN_STRICT:
     BLOCKED |= ACCOUNT_TO_APPLY_DOMAINS - _split_env(NO_LOGIN_ALLOW_EXTRA)
 

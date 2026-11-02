@@ -4,6 +4,7 @@ from typing import Any
 
 from backend.no_login import filter_no_login
 from backend.providers import PROVIDERS
+from backend.remote import filter_remote
 from backend.schemas import SearchRequest
 
 
@@ -21,6 +22,16 @@ def search_job_links(
         site_status.append(
             {
                 "site": "no-login filter",
+                "count": len(jobs),
+                "error": None,
+                "dropped": dropped,
+            }
+        )
+    if payload.remote_only and payload.location_type == "remote":
+        jobs, dropped = filter_remote(jobs)
+        site_status.append(
+            {
+                "site": "remote filter",
                 "count": len(jobs),
                 "error": None,
                 "dropped": dropped,
